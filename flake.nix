@@ -19,7 +19,14 @@
         ];
       };
 
-      rust = pkgs.rust-bin.stable.latest.default;
+      rust = pkgs.rust-bin.stable.latest.default.override {
+        extensions = [
+          "rust-analyzer"
+        ];
+        targets = [
+          "wasm32-unknown-unknown"
+        ];
+      };
     in
     {
       devShells.${system}.default = pkgs.mkShell {
@@ -28,6 +35,8 @@
 
           wrangler
           worker-build
+
+          wasm-bindgen-cli
         ];
       };
     };
