@@ -1,21 +1,59 @@
-use axum::{routing::get, Router};
-use tower_service::Service;
+use hmac::{Hmac, Mac};
 use worker::*;
 
-fn router() -> Router {
-    Router::new().route("/", get(root))
-}
+use subtle::ConstantTimeEq;
 
-#[event(fetch)]
-async fn fetch(
-    req: HttpRequest,
-    _env: Env,
-    _ctx: Context,
-) -> Result<axum::http::Response<axum::body::Body>> {
+#[event(fetch, respond_with_errors)]
+pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
     console_error_panic_hook::set_once();
-    Ok(router().call(req).await?)
+
+    let router = Router::new();
+
+    router.post_async("/webhook", webhook).run(req, env).await
 }
 
-pub async fn root() -> &'static str {
-    "Hello Axum!"
+async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let webhook_sec: String = ctx.secret("WEBHOOK_SEC")?.to_string();
+    let signature: Option<String> = req.headers().get("X-Hub-Signature-256")?;
+
+    let mut req = req;
+
+    if let Some(sig) = signature {
+        let body = req.text().await?;
+
+        if !verify_signature(&body, &webhook_sec, &sig[7..] /* sha256= */) {
+            return Response::error("Unauthorised (signature did not match)", 403);
+        }
+
+        todo!()
+    } else {
+        Response::error("Unauthorised (signature does not exit)", 403)
+    }
+}
+
+fn verify_signature(body: &str, sec: &str, sig: &str) -> bool {
+    let mut mac = Hmac::<sha2::Sha256>::new_from_slice(sec.as_bytes()).unwrap();
+
+    mac.update(body.as_bytes());
+
+    let result = mac.finalize();
+
+    hex::encode(result.into_bytes())
+        .as_bytes()
+        .ct_eq(&sig.as_bytes())
+        .unwrap_u8()
+        == 1
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_verify_sig() -> Result<(), Box<dyn std::error::Error>> {
+        assert!(super::verify_signature(
+            "Hello, World!",
+            "It's a Secret to Everybody",
+            &"sha256=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"[7..]
+        ));
+        Ok(())
+    }
 }
