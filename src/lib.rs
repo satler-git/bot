@@ -1,3 +1,7 @@
+mod error;
+mod github;
+
+use github::GitHubEvent;
 use hmac::{Hmac, Mac};
 use worker::*;
 
@@ -22,12 +26,35 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         let body = req.text().await?;
 
         if !verify_signature(&body, &webhook_sec, &sig[7..] /* sha256= */) {
-            return Response::error("Unauthorised (signature did not match)", 403);
+            return Response::error("Unauthorised (signature did not match)", 401);
         }
 
-        Response::empty() // TODO:
+        let github_event = {
+            let event_type = req.headers().get("X-GitHub-Event")?.unwrap().into();
+            GitHubEvent {
+                _type: event_type,
+                payload: body.into(),
+            }
+        };
+
+        match github_event._type {
+            github::EventType::IssueComment => {
+                let issue_comment_event: ocho_gato::IssueCommentEvent =
+                    serde_json::from_value(github_event.payload)
+                        .map_err(worker::Error::SerdeJsonError)?;
+
+                match issue_comment_event {
+                    ocho_gato::IssueCommentEvent::Created(event) => {
+                        todo!()
+                    }
+                    ocho_gato::IssueCommentEvent::Deleted(_) => Response::empty(),
+                    ocho_gato::IssueCommentEvent::Edited(_) => Response::empty(),
+                }
+            }
+            _ => Response::empty(),
+        }
     } else {
-        Response::error("Unauthorised (signature does not exit)", 403)
+        Response::error("Unauthorised (signature does not exit)", 401)
     }
 }
 
@@ -40,7 +67,7 @@ fn verify_signature(body: &str, sec: &str, sig: &str) -> bool {
 
     hex::encode(result.into_bytes())
         .as_bytes()
-        .ct_eq(&sig.as_bytes())
+        .ct_eq(sig.as_bytes())
         .unwrap_u8()
         == 1
 }
