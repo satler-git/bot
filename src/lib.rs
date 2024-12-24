@@ -1,9 +1,15 @@
 mod crypt;
 mod error;
 mod github;
+mod handle;
 
+use crypt::GitHubApp;
 use github::GitHubEvent;
 use worker::*;
+
+use github_webhook::payload_types as gh;
+
+use serde::de::Deserialize;
 
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
@@ -15,6 +21,11 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
 }
 
 async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let github_app = GitHubApp::new(
+        include_str!("../secret.pem"),
+        &ctx.secret("GITHUB_CLIENT_ID")?.to_string(),
+    );
+
     let webhook_sec: String = ctx.secret("WEBHOOK_SEC")?.to_string();
     let signature: Option<String> = req.headers().get("X-Hub-Signature-256")?;
 
@@ -31,22 +42,27 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
             let event_type = req.headers().get("X-GitHub-Event")?.unwrap().into();
             GitHubEvent {
                 _type: event_type,
-                payload: body.into(),
+                payload: serde_json::from_str(&body).map_err(Error::SerdeJsonError)?,
             }
         };
 
         match github_event._type {
             github::EventType::IssueComment => {
-                let issue_comment_event: ocho_gato::IssueCommentEvent =
-                    serde_json::from_value(github_event.payload)
-                        .map_err(worker::Error::SerdeJsonError)?;
+                let issue_comment_event = gh::IssueCommentEvent::deserialize(&github_event.payload)
+                    .map_err(Error::SerdeJsonError)?;
 
                 match issue_comment_event {
-                    ocho_gato::IssueCommentEvent::Created(event) => {
-                        todo!()
+                    gh::IssueCommentEvent::Created(event) => {
+                        let token = github_app
+                            .token(event.installation.as_ref().unwrap().id as usize)
+                            .await?;
+
+                        handle::issue_comment_created(event, token).await?;
+
+                        Response::empty()
                     }
-                    ocho_gato::IssueCommentEvent::Deleted(_) => Response::empty(),
-                    ocho_gato::IssueCommentEvent::Edited(_) => Response::empty(),
+                    gh::IssueCommentEvent::Edited(_) => Response::empty(),
+                    gh::IssueCommentEvent::Deleted(_) => Response::empty(),
                 }
             }
             _ => Response::empty(),

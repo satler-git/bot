@@ -15,6 +15,10 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: nicknovitski/nix-develop@v1
+      - name: Write secret to a file
+        run: echo "$SECRET_PEM" > secret.pem
+        env:
+          SECRET_PEM: ${{ secrets.SECRET_PEM }}
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:

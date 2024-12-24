@@ -19,8 +19,18 @@ subtle = "2.6.0"
 sha2 = "0.10.8"
 hmac = "0.12.1"
 hex = "0.4"
+jwt-simple = "0.12.11"
 
-ocho-gato = "0.1.0"
+js-sys = "0.3.76"
+
+# github-webhook = "0.5.2"
+github-webhook = { git = "https://github.com/satler-git/github-webhook-rs.git", branch = "test-patch" }
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = "1.0.134"
 thiserror = "2.0"
+reqwest = { version = "0.12.9", default-features = false, features = [
+  "json",
+  "http2",
+  "charset",
+  "rustls-tls",
+] }
