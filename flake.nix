@@ -39,6 +39,9 @@
           wasm-bindgen-cli
 
           gosmee
+
+          pkg-config
+          openssl
         ];
       };
     };
