@@ -1,11 +1,9 @@
+mod crypt;
 mod error;
 mod github;
 
 use github::GitHubEvent;
-use hmac::{Hmac, Mac};
 use worker::*;
-
-use subtle::ConstantTimeEq;
 
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
@@ -25,7 +23,7 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     if let Some(sig) = signature {
         let body = req.text().await?;
 
-        if !verify_signature(&body, &webhook_sec, &sig[7..] /* sha256= */) {
+        if !crypt::verify_signature(&body, &webhook_sec, &sig[7..] /* sha256= */) {
             return Response::error("Unauthorised (signature did not match)", 401);
         }
 
@@ -55,32 +53,5 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         }
     } else {
         Response::error("Unauthorised (signature does not exit)", 401)
-    }
-}
-
-fn verify_signature(body: &str, sec: &str, sig: &str) -> bool {
-    let mut mac = Hmac::<sha2::Sha256>::new_from_slice(sec.as_bytes()).unwrap();
-
-    mac.update(body.as_bytes());
-
-    let result = mac.finalize();
-
-    hex::encode(result.into_bytes())
-        .as_bytes()
-        .ct_eq(sig.as_bytes())
-        .unwrap_u8()
-        == 1
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_verify_sig() -> Result<(), Box<dyn std::error::Error>> {
-        assert!(super::verify_signature(
-            "Hello, World!",
-            "It's a Secret to Everybody",
-            &"sha256=757107ea0eb2509fc211221cce984b8a37570b6d7586c22c46f4379c8b043e17"[7..]
-        ));
-        Ok(())
     }
 }
