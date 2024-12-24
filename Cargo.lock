@@ -1361,6 +1361,8 @@ dependencies = [
  "github-webhook",
  "hex",
  "hmac",
+ "serde",
+ "serde_json",
  "sha2",
  "subtle",
  "worker",
