@@ -37,6 +37,8 @@
           worker-build
 
           wasm-bindgen-cli
+
+          gosmee
         ];
       };
     };

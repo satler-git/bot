@@ -25,7 +25,7 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
             return Response::error("Unauthorised (signature did not match)", 403);
         }
 
-        todo!()
+        Response::empty() // TODO:
     } else {
         Response::error("Unauthorised (signature does not exit)", 403)
     }
