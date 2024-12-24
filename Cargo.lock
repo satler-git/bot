@@ -750,7 +750,7 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 [[package]]
 name = "github-webhook"
 version = "0.6.0"
-source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch#18970d76af8c4c5d1586da47b9b70c0670531085"
+source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch2#58146ec52e0ad573d01b3329fc74cb19970abdf3"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -763,7 +763,7 @@ dependencies = [
 [[package]]
 name = "github-webhook-dts-downloader"
 version = "0.6.0"
-source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch#18970d76af8c4c5d1586da47b9b70c0670531085"
+source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch2#58146ec52e0ad573d01b3329fc74cb19970abdf3"
 dependencies = [
  "anyhow",
  "minreq",
@@ -772,7 +772,7 @@ dependencies = [
 [[package]]
 name = "github-webhook-type-generator"
 version = "0.6.0"
-source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch#18970d76af8c4c5d1586da47b9b70c0670531085"
+source = "git+https://github.com/satler-git/github-webhook-rs.git?branch=test-patch2#58146ec52e0ad573d01b3329fc74cb19970abdf3"
 dependencies = [
  "once_cell",
  "proc-macro2",
