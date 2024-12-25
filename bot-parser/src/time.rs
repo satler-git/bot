@@ -7,10 +7,7 @@ pub(crate) fn parse_time(value: &str) -> Result<NaiveDateTime> {
     } else if let Ok(parsed_time) = NaiveTime::parse_from_str(value, "%H:%M") {
         // 時刻のみ指定されている場合
 
-        Ok(NaiveDateTime::new(
-            Utc::now().date_naive(),
-            parsed_time - Duration::hours(9),
-        ))
+        Ok(NaiveDateTime::new(Utc::now().date_naive(), parsed_time))
         // HACK:
         // 正しく変換できない。DateはUTCだけど、parsed_timeはユーザーが書いた、UTC+9だから
     } else {
