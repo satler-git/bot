@@ -282,6 +282,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot-parser"
+version = "0.1.0"
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1950,6 +1954,7 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 name = "satler-bot"
 version = "0.1.0"
 dependencies = [
+ "bot-parser",
  "console_error_panic_hook",
  "github-webhook",
  "hex",
