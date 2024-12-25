@@ -2006,6 +2006,7 @@ name = "satler-bot"
 version = "0.1.0"
 dependencies = [
  "bot-parser",
+ "chrono",
  "console_error_panic_hook",
  "github-webhook",
  "hex",

@@ -10,6 +10,10 @@ edition = "2021"
 license = "MIT"
 publish = false
 
+[workspace.dependencies]
+chrono = "0.4.39"
+thiserror = "2.0"
+
 [package]
 name = "satler-bot"
 version.workspace = true
@@ -39,7 +43,6 @@ js-sys = "0.3.76"
 github-webhook = { git = "https://github.com/satler-git/github-webhook-rs.git", branch = "test-patch2" }
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = "1.0.134"
-thiserror = "2.0"
 reqwest = { version = "0.12.9", default-features = false, features = [
   "json",
   "http2",
@@ -48,3 +51,6 @@ reqwest = { version = "0.12.9", default-features = false, features = [
 ] }
 
 bot-parser = { path = "./bot-parser/" }
+
+chrono.workspace = true
+thiserror.workspace = true
