@@ -12,7 +12,8 @@ pub enum Command {
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub enum Marge {
-    NoArgs(chrono::NaiveDateTime),
+    Add(chrono::NaiveDateTime),
+    Cancel,
     /// help and h
     #[default]
     Help,
@@ -39,10 +40,17 @@ impl Command {
     }
 
     fn try_parse_marge(input: &[&str]) -> error::Result<Marge> {
-        if input.is_empty() || input[0].to_lowercase() == "h" || input[0].to_lowercase() == "help" {
-            return Ok(Marge::Help);
+        let cmd = input.get(0).map(|s| s.to_lowercase());
+
+        match cmd {
+            Some(s) => match s.as_str() {
+                "c" | "cancel" => Ok(Marge::Cancel),
+                "a" | "add" => Ok(Marge::Add(time::parse_time(input[1])?)),
+                "h" | "help" => Ok(Marge::Help),
+                _ => Ok(Marge::Add(time::parse_time(input[0])?)),
+            },
+            Option::None => Ok(Marge::Help),
         }
-        Ok(Marge::NoArgs(time::parse_time(input[0])?))
     }
 
     fn lexer(input: &str) -> Vec<&str> {
@@ -69,7 +77,16 @@ mod tests {
     fn test_parse_parse_marge() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
             Command::try_parse("@bot m 2024-11-30T12:00", "@bot")?,
-            Command::Marge(Marge::NoArgs(
+            Command::Marge(Marge::Add(
+                chrono::NaiveDate::from_ymd_opt(2024, 11, 30)
+                    .unwrap()
+                    .and_hms_opt(12, 0, 0)
+                    .unwrap()
+            ))
+        );
+        assert_eq!(
+            Command::try_parse("@bot m add 2024-11-30T12:00", "@bot")?,
+            Command::Marge(Marge::Add(
                 chrono::NaiveDate::from_ymd_opt(2024, 11, 30)
                     .unwrap()
                     .and_hms_opt(12, 0, 0)
@@ -81,6 +98,10 @@ mod tests {
             Command::Marge(Marge::Help)
         );
         Command::try_parse("@bot M 12:00", "@bot")?;
+        assert_eq!(
+            Command::try_parse("@bot m c", "@bot")?,
+            Command::Marge(Marge::Cancel)
+        );
         Ok(())
     }
 }
