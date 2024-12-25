@@ -38,7 +38,7 @@ impl GitHubApp {
         self.key.sign(claim).unwrap()
     }
 
-    pub async fn token(&self, installation_id: usize) -> Result<String, worker::Error> {
+    pub async fn token(&self, installation_id: u64) -> Result<String, worker::Error> {
         use reqwest::header;
 
         #[derive(Debug, serde::Deserialize)]

@@ -54,7 +54,7 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
                 match issue_comment_event {
                     gh::IssueCommentEvent::Created(event) => {
                         let token = github_app
-                            .token(event.installation.as_ref().unwrap().id as usize)
+                            .token(event.installation.as_ref().unwrap().id)
                             .await?;
 
                         handle::issue_comment_created(event, token).await?;
