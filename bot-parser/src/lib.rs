@@ -40,6 +40,21 @@ impl Command {
     }
 }
 
+impl Help for Command {
+    const HELP: &str = "
+You can run commands like (`@mention help`).
+
+# Commands
+
+All commands are case-insensitive.
+Commands may have shorthand versions; for example, `help` is semantically equivalent to `h`.
+If you run a command without arguments, the help message will be displayed.
+
+- `marge` (`m`): View the help for the marge command (`marge help`).
+- `help` (`h`): Display this help message.
+";
+}
+
 impl Marge {
     fn try_parse_marge(input: &[&str]) -> error::Result<Marge> {
         let cmd = input.get(0).map(|s| s.to_lowercase());
@@ -56,6 +71,27 @@ impl Marge {
     }
 }
 
+impl Help for Marge {
+    const HELP: &str = "
+`marge` command help.
+
+# Sub-commands
+
+- `add` (`a`): Schedule automatic merging.
+    - You can run this command like this:
+        - `marge add 16:00`
+            - Schedules merging at 16:00 today.
+        - `marge add 2024-12-31T16:00`
+            - Schedules merging at 16:00 on 2024-12-31.
+- `cancel` (`c`): Cancel a scheduled merge.
+- `help` (`h`): Display this help message.
+
+Running the command **without sub-commands** acts as an alias for `add`.
+";
+}
+
+pub trait Help {
+    const HELP: &str;
 }
 
 #[cfg(test)]
