@@ -1,8 +1,6 @@
 use hmac::{Hmac, Mac};
 use subtle::ConstantTimeEq;
 
-const USER_AGENT: &str = "satler-bot";
-
 pub fn verify_signature(body: &str, sec: &str, sig: &str) -> bool {
     let mut mac = Hmac::<sha2::Sha256>::new_from_slice(sec.as_bytes()).unwrap();
 
@@ -56,7 +54,7 @@ impl GitHubApp {
             .header("X-GitHub-Api-Version", "2022-11-28")
             .header(header::AUTHORIZATION, format!("Bearer {jwt}"))
             .header(header::ACCEPT, "application/vnd.github+json")
-            .header(header::USER_AGENT, USER_AGENT)
+            .header(header::USER_AGENT, crate::APP_NAME)
             .send()
             .await
             .map_err(|e| worker::Error::RustError(format!("Error in sending a request: {e}")))?

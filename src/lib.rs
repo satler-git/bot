@@ -11,6 +11,8 @@ use github_webhook::payload_types as gh;
 
 use serde::de::Deserialize;
 
+const APP_NAME: &str = "satler-bot";
+
 #[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
     console_error_panic_hook::set_once();
