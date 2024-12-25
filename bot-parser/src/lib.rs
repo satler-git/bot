@@ -1,12 +1,9 @@
 mod error;
 mod time;
 
-/// Commands are not case sensitive
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
-    /// marge and m
     Marge(Marge),
-    /// help and h
     Help,
 }
 
@@ -14,7 +11,6 @@ pub enum Command {
 pub enum Marge {
     Add(chrono::NaiveDateTime),
     Cancel,
-    /// help and h
     #[default]
     Help,
 }
@@ -31,7 +27,7 @@ impl Command {
 
         match cmd {
             Some(s) => match s.as_str() {
-                "m" | "marge" => Ok(Command::Marge(Self::try_parse_marge(&tokens[2..])?)),
+                "m" | "marge" => Ok(Command::Marge(Marge::try_parse_marge(&tokens[2..])?)),
                 "h" | "help" => Ok(Command::Help),
                 _ => Err(error::Error::NotACommand(input.into())),
             },
@@ -39,6 +35,12 @@ impl Command {
         }
     }
 
+    fn lexer(input: &str) -> Vec<&str> {
+        input.split_whitespace().collect()
+    }
+}
+
+impl Marge {
     fn try_parse_marge(input: &[&str]) -> error::Result<Marge> {
         let cmd = input.get(0).map(|s| s.to_lowercase());
 
@@ -52,10 +54,8 @@ impl Command {
             Option::None => Ok(Marge::Help),
         }
     }
+}
 
-    fn lexer(input: &str) -> Vec<&str> {
-        input.split_whitespace().collect()
-    }
 }
 
 #[cfg(test)]
