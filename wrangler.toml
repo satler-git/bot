@@ -2,6 +2,8 @@ name = "satler-bot"
 main = "build/worker/shim.mjs"
 compatibility_date = "2024-09-25"
 
+routes = [{ pattern = "bot.satler.dev", custom_domain = true }]
+
 [build]
 command = "worker-build --release"
 
