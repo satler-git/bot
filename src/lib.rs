@@ -1,3 +1,6 @@
+//! エントリポイントになってデシリアライズとルーティングをしている
+//! src/handle.rs にルート先の関数が置かれている
+
 mod crypt;
 mod error;
 mod github;

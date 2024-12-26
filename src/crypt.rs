@@ -1,3 +1,5 @@
+//! トークンの生成とWebHookの検証をしてる
+
 use hmac::{Hmac, Mac};
 use subtle::ConstantTimeEq;
 
