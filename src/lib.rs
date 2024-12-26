@@ -6,6 +6,7 @@ mod error;
 mod github;
 mod handle;
 mod parser;
+mod schedule;
 
 use crypt::GitHubApp;
 use github::GitHubEvent;
@@ -65,11 +66,13 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
 
                 match issue_comment_event {
                     gh::IssueCommentEvent::Created(event) => {
+                        let d1 = ctx.env.d1("DB")?;
+
                         let token = github_app
                             .token(event.installation.as_ref().unwrap().id)
                             .await?;
 
-                        handle::issue_comment_created(event, token).await?;
+                        handle::issue_comment_created(event, token, d1).await?;
 
                         Response::empty()
                     }
@@ -81,5 +84,13 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         }
     } else {
         Response::error("Unauthorised (signature does not exit)", 401)
+    }
+}
+
+#[event(scheduled)]
+pub async fn scheduled_handler(event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
+    {
+        let d1 = env.d1("DB").unwrap();
+        schedule::auto_merge(d1).await.unwrap();
     }
 }

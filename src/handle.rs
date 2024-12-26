@@ -11,6 +11,7 @@ const MENTION: &str = "@satler-bot";
 pub async fn issue_comment_created<'a>(
     event: gh::IssueCommentCreatedEvent<'a>,
     token: String,
+    d1: D1Database,
 ) -> Result<()> {
     let input = event.comment.body;
     let command = crate::parser::Command::try_parse(input, MENTION);

@@ -5,8 +5,8 @@ compatibility_date = "2024-09-25"
 [build]
 command = "worker-build --release"
 
-# [triggers]
-# crons = ["*/5 * * * *"]
+[triggers]
+crons = ["*/5 * * * *"]
 
 [[d1_databases]]
 binding = "DB"                                       # i.e. available in your Worker on env.DB
