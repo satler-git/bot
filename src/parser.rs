@@ -97,7 +97,7 @@ pub trait Help {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Command, Merge};
+    use super::{Command, Merge};
 
     #[test]
     fn test_parse_simple_help() -> Result<(), Box<dyn std::error::Error>> {

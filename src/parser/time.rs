@@ -1,4 +1,4 @@
-use crate::error::Result;
+use super::error::Result;
 use chrono::{Duration, NaiveDateTime, NaiveTime, Utc};
 
 pub(crate) fn parse_time(value: &str) -> Result<NaiveDateTime> {
@@ -11,7 +11,7 @@ pub(crate) fn parse_time(value: &str) -> Result<NaiveDateTime> {
         // HACK:
         // 正しく変換できない。DateはUTCだけど、parsed_timeはユーザーが書いた、UTC+9だから
     } else {
-        Err(crate::error::Error::TimeFormat(format!("{value}")))
+        Err(super::error::Error::TimeFormat(format!("{value}")))
     }
 }
 

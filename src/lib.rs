@@ -2,6 +2,7 @@ mod crypt;
 mod error;
 mod github;
 mod handle;
+mod parser;
 
 use crypt::GitHubApp;
 use github::GitHubEvent;

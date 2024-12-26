@@ -2,7 +2,7 @@ use chrono::{FixedOffset, NaiveDateTime, Utc};
 use github_webhook::payload_types as gh;
 use worker::*;
 
-use bot_parser::{Command, Help, Merge};
+use crate::parser::{Command, Help, Merge};
 
 use crate::github::comment_on_issue;
 
@@ -13,7 +13,7 @@ pub async fn issue_comment_created<'a>(
     token: String,
 ) -> Result<()> {
     let input = event.comment.body;
-    let command = bot_parser::Command::try_parse(input, MENTION);
+    let command = crate::parser::Command::try_parse(input, MENTION);
 
     // worker::console_debug!("{command:?}");
 
@@ -24,7 +24,7 @@ pub async fn issue_comment_created<'a>(
         != event.comment.user.login // TODO: 送った人にメンション?
         || command.is_err()
     {
-        if let Err(bot_parser::error::Error::NotACommand(_)) = command {
+        if let Err(crate::parser::error::Error::NotACommand(_)) = command {
             // メンションされたけど正しくない場合
             comment_on_issue(
                 issue,
