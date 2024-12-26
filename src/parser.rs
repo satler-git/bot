@@ -9,6 +9,7 @@ pub enum Command {
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub enum Merge {
+    /// Asia/Tokyoであるため注意
     Add(chrono::NaiveDateTime),
     Cancel,
     #[default]
