@@ -19,7 +19,7 @@ impl Command {
     pub fn try_parse(input: &str, mention: &str) -> error::Result<Command> {
         let tokens = Self::lexer(input);
 
-        if tokens.get(0) != Some(&mention) {
+        if tokens.first() != Some(&mention) {
             return Err(error::Error::NotAMention);
         }
 
@@ -58,7 +58,7 @@ If you run a command without arguments, the help message will be displayed.
 
 impl Merge {
     fn try_parse_merge(input: &[&str]) -> error::Result<Merge> {
-        let cmd = input.get(0).map(|s| s.to_lowercase());
+        let cmd = input.first().map(|s| s.to_lowercase());
 
         match cmd {
             Some(s) => match s.as_str() {

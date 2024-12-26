@@ -1,5 +1,5 @@
 use super::error::Result;
-use chrono::{Duration, NaiveDateTime, NaiveTime, Utc};
+use chrono::{NaiveDateTime, NaiveTime, Utc};
 
 pub(crate) fn parse_time(value: &str) -> Result<NaiveDateTime> {
     if let Ok(datetime) = NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M") {
@@ -11,7 +11,7 @@ pub(crate) fn parse_time(value: &str) -> Result<NaiveDateTime> {
         // HACK:
         // 正しく変換できない。DateはUTCだけど、parsed_timeはユーザーが書いた、UTC+9だから
     } else {
-        Err(super::error::Error::TimeFormat(format!("{value}")))
+        Err(super::error::Error::TimeFormat(value.into()))
     }
 }
 

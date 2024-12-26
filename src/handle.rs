@@ -61,11 +61,6 @@ pub async fn issue_comment_created<'a>(
     Ok(())
 }
 
-use std::cell::LazyCell;
-
-const ASIA_TOKYO: LazyCell<FixedOffset> =
-    LazyCell::new(|| FixedOffset::east_opt(5 * 3600).unwrap());
-
 async fn handle_merge_add<'a>(
     event: gh::IssueCommentCreatedEvent<'a>,
     token: &str,
@@ -90,7 +85,8 @@ async fn handle_merge_add<'a>(
     {
         let issue = &event.issue.issue;
         let repo = &event.repository;
-        let now = Utc::now().with_timezone(&*ASIA_TOKYO).naive_local();
+        let tz = FixedOffset::east_opt(5 * 3600).unwrap();
+        let now = Utc::now().with_timezone(&tz).naive_local();
         if now > date {
             comment_on_issue(
                 issue,
