@@ -82,23 +82,6 @@ async fn handle_merge_add<'a>(
             return Ok(());
         }
     }
-    // 過ぎている場合
-    {
-        let issue = &event.issue.issue;
-        let repo = &event.repository;
-        let tz = FixedOffset::east_opt(5 * 3600).unwrap();
-        let now = Utc::now().with_timezone(&tz).naive_local();
-        if now > date {
-            comment_on_issue(
-                issue,
-                repo,
-                "It is not possible to specify a time past",
-                token,
-            )
-            .await?;
-            return Ok(());
-        }
-    }
     // 既にマージされている場合
     {
         let issue = &event.issue.issue;
@@ -109,6 +92,24 @@ async fn handle_merge_add<'a>(
                 issue,
                 repo,
                 "It is not possible to run this command on the merged Pull Request",
+                token,
+            )
+            .await?;
+            return Ok(());
+        }
+    }
+    // 過ぎている場合
+    {
+        let issue = &event.issue.issue;
+        let repo = &event.repository;
+        let tz = FixedOffset::east_opt(9 * 3600).unwrap();
+        let now = Utc::now().with_timezone(&tz).naive_local();
+
+        if now > date {
+            comment_on_issue(
+                issue,
+                repo,
+                "It is not possible to specify a time past",
                 token,
             )
             .await?;
