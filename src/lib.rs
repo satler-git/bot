@@ -23,7 +23,13 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
 
     let router = Router::new();
 
-    router.post_async("/webhook", webhook).run(req, env).await
+    router
+        .get_async("/", |_req, ctx| async move {
+            Response::redirect(Url::parse("https://github.com/satler-git/bot")?)
+        })
+        .post_async("/webhook", webhook)
+        .run(req, env)
+        .await
 }
 
 async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
