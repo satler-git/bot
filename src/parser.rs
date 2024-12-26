@@ -29,7 +29,7 @@ impl Command {
             Some(s) => match s.as_str() {
                 "m" | "merge" => Ok(Command::Merge(Merge::try_parse_merge(&tokens[2..])?)),
                 "h" | "help" => Ok(Command::Help),
-                _ => Err(error::Error::NotACommand(input.into())),
+                _ => Err(error::Error::NotACommand),
             },
             Option::None => Ok(Command::Help),
         }
@@ -63,7 +63,13 @@ impl Merge {
         match cmd {
             Some(s) => match s.as_str() {
                 "c" | "cancel" => Ok(Merge::Cancel),
-                "a" | "add" => Ok(Merge::Add(time::parse_time(input[1])?)),
+                "a" | "add" => {
+                    if input.len() == 1 {
+                        Err(error::Error::NotACommand)
+                    } else {
+                        Ok(Merge::Add(time::parse_time(input[1])?))
+                    }
+                }
                 "h" | "help" => Ok(Merge::Help),
                 _ => Ok(Merge::Add(time::parse_time(input[0])?)),
             },

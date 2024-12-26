@@ -24,7 +24,7 @@ pub async fn issue_comment_created<'a>(
         != event.comment.user.login // TODO: 送った人にメンション?
         || command.is_err()
     {
-        if let Err(crate::parser::error::Error::NotACommand(_)) = command {
+        if let Err(crate::parser::error::Error::NotACommand) = command {
             // メンションされたけど正しくない場合
             comment_on_issue(
                 issue,
