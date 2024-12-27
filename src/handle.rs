@@ -12,6 +12,7 @@ pub async fn issue_comment_created<'a>(
     event: gh::IssueCommentCreatedEvent<'a>,
     token: String,
     d1: D1Database,
+    installation_id: u64,
 ) -> Result<()> {
     let input = event.comment.body;
     let command = crate::parser::Command::try_parse(input, MENTION);
@@ -20,6 +21,9 @@ pub async fn issue_comment_created<'a>(
 
     let issue = &event.issue.issue;
     let repo = &event.repository;
+    let owner = &repo.owner.login;
+    let repo_name = &repo.name;
+    let issue_num = issue.number;
 
     if "satler-git" // TODO:人を変更できるようにする？
         != event.comment.user.login // TODO: 送った人にメンション?
@@ -28,8 +32,9 @@ pub async fn issue_comment_created<'a>(
         if let Err(crate::parser::error::Error::NotACommand) = command {
             // メンションされたけど正しくない場合
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "Some syntax is wrong. View the help with the`help` command",
                 &token,
             )
@@ -39,8 +44,9 @@ pub async fn issue_comment_created<'a>(
             worker::console_debug!("{:?}", event.comment.user.name);
 
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "You are not authorised to operate this operation here",
                 &token,
             )
@@ -52,11 +58,15 @@ pub async fn issue_comment_created<'a>(
     let command = command.unwrap();
 
     match command {
-        Command::Help => comment_on_issue(issue, repo, Command::HELP, &token).await?,
+        Command::Help => {
+            comment_on_issue(issue_num, owner, repo_name, Command::HELP, &token).await?
+        }
         Command::Merge(merge) => match merge {
-            Merge::Add(date) => handle_merge_add(event, &token, date, &d1).await?,
+            Merge::Add(date) => handle_merge_add(event, &token, date, &d1, installation_id).await?,
             Merge::Cancel => handle_merge_cancel(event, &token, &d1).await?,
-            Merge::Help => comment_on_issue(issue, repo, Merge::HELP, &token).await?,
+            Merge::Help => {
+                comment_on_issue(issue_num, owner, repo_name, Merge::HELP, &token).await?
+            }
         },
     }
     Ok(())
@@ -67,15 +77,20 @@ async fn handle_merge_add<'a>(
     token: &str,
     date: NaiveDateTime,
     d1: &D1Database,
+    installation_id: u64,
 ) -> Result<()> {
     let issue = &event.issue.issue;
     let repo = &event.repository;
+    let owner = &repo.owner.login;
+    let repo_name = &repo.name;
+    let issue_num = issue.number;
     // Issueな場合
     {
         if issue.pull_request.is_none() {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "This operation can only be performed on Pull Requests",
                 token,
             )
@@ -88,8 +103,9 @@ async fn handle_merge_add<'a>(
     {
         if pr.merged_at.is_some() {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "It is not possible to run this command on the merged Pull Request",
                 token,
             )
@@ -104,8 +120,9 @@ async fn handle_merge_add<'a>(
 
         if now > date {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "It is not possible to specify a time past",
                 token,
             )
@@ -124,8 +141,9 @@ async fn handle_merge_add<'a>(
             .is_some()
         {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "It is not possible to schedule in a merged Pull Request",
                 token,
             )
@@ -137,11 +155,12 @@ async fn handle_merge_add<'a>(
     let date_utc = date - std::time::Duration::from_secs(9 * 3600);
     let insert_merge_query = worker::query!(
         &d1,
-        "INSERT INTO merge (pr_number, owner, repository, will_merged_at) VALUES (?1, ?2, ?3, ?4)",
+        "INSERT INTO merge (pr_number, owner, repository, will_merged_at, installation_id) VALUES (?1, ?2, ?3, ?4, ?5)",
         &issue_num,
         &owner,
         &repo_name,
         &date_utc.to_string(),
+        installation_id,
     )?;
 
     let result = d1.batch(vec![insert_merge_query]).await?;
@@ -153,8 +172,9 @@ async fn handle_merge_add<'a>(
     }
 
     comment_on_issue(
-        issue,
-        repo,
+        issue_num,
+        owner,
+        repo_name,
         "Automatic merging has been successfully scheduled",
         token,
     )
@@ -170,12 +190,16 @@ async fn handle_merge_cancel<'a>(
 ) -> Result<()> {
     let issue = &event.issue.issue; // TODO: 上と共通だから切りだす
     let repo = &event.repository;
+    let owner = &repo.owner.login;
+    let repo_name = &repo.name;
+    let issue_num = issue.number;
     // Issueな場合
     {
         if issue.pull_request.is_none() {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "This operation can only be performed on Pull Requests",
                 token,
             )
@@ -184,17 +208,14 @@ async fn handle_merge_cancel<'a>(
         }
     }
 
-    let owner = &repo.owner.login;
-    let repo_name = &repo.name;
-    let issue_num = issue.number;
-
     {
         let merged = is_already_merged(owner, repo_name, issue_num, d1).await?;
         // select してマージされていたらコメント
         if merged.is_none() {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "It is not possible to cancel in a Pull Request that does not have an automatic merge scheduled",
                 token,
             )
@@ -203,8 +224,9 @@ async fn handle_merge_cancel<'a>(
         // スケジュールされていなかったらコメント
         } else if merged == Some(true) {
             comment_on_issue(
-                issue,
-                repo,
+                issue_num,
+                owner,
+                repo_name,
                 "It is not possible to cancel in a pull request that has been automatically merged",
                 token,
             )
@@ -231,8 +253,9 @@ async fn handle_merge_cancel<'a>(
     }
 
     comment_on_issue(
-        issue,
-        repo,
+        issue_num,
+        owner,
+        repo_name,
         "The automatic merge has been successfully cancelled.",
         token,
     )

@@ -68,11 +68,10 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
                     gh::IssueCommentEvent::Created(event) => {
                         let d1 = ctx.env.d1("DB")?;
 
-                        let token = github_app
-                            .token(event.installation.as_ref().unwrap().id)
-                            .await?;
+                        let installation = event.installation.as_ref().unwrap().id;
+                        let token = github_app.token(installation).await?;
 
-                        handle::issue_comment_created(event, token, d1).await?;
+                        handle::issue_comment_created(event, token, d1, installation).await?;
 
                         Response::empty()
                     }
@@ -89,8 +88,13 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
 
 #[event(scheduled)]
 pub async fn scheduled_handler(_event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
+    let github_app = GitHubApp::new(
+        include_str!("../secret.pem"),
+        &env.secret("GITHUB_CLIENT_ID").unwrap().to_string(),
+    );
+
     {
         let d1 = env.d1("DB").unwrap();
-        schedule::auto_merge(d1).await.unwrap();
+        schedule::auto_merge(&d1, github_app).await.unwrap();
     }
 }
