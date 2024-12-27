@@ -54,8 +54,8 @@ pub async fn issue_comment_created<'a>(
     match command {
         Command::Help => comment_on_issue(issue, repo, Command::HELP, &token).await?,
         Command::Merge(merge) => match merge {
-            Merge::Add(date) => handle_merge_add(event, &token, date).await?,
-            Merge::Cancel => handle_merge_cancel(event, &token).await?,
+            Merge::Add(date) => handle_merge_add(event, &token, date, d1).await?,
+            Merge::Cancel => handle_merge_cancel(event, &token, d1).await?,
             Merge::Help => comment_on_issue(issue, repo, Merge::HELP, &token).await?,
         },
     }
@@ -66,6 +66,7 @@ async fn handle_merge_add<'a>(
     event: gh::IssueCommentCreatedEvent<'a>,
     token: &str,
     date: NaiveDateTime,
+    d1: D1Database,
 ) -> Result<()> {
     let issue = &event.issue.issue;
     let repo = &event.repository;
@@ -83,8 +84,8 @@ async fn handle_merge_add<'a>(
         }
     }
     // 既にマージされている場合
+    let pr = issue.pull_request.as_ref().unwrap();
     {
-        let pr = issue.pull_request.as_ref().unwrap();
         if pr.merged_at.is_some() {
             comment_on_issue(
                 issue,
@@ -113,13 +114,40 @@ async fn handle_merge_add<'a>(
         }
     }
 
-    //  YYYY-MM-DDTHH:MM
-    Ok(()) // TODO:
+    let date_utc = date - std::time::Duration::from_secs(9 * 3600);
+    let insert_merge_query = worker::query!(
+        &d1,
+        "INSERT INTO merge (pr_number, owner, repository, will_merged_at) VALUES (?1, ?2, ?3, ?4)",
+        &issue.number,
+        &repo.owner.login,
+        &repo.name,
+        &date_utc.to_string(),
+    )?;
+
+    let result = d1.batch(vec![insert_merge_query]).await?;
+
+    if result[0].success() == false {
+        return Err(worker::Error::RustError(format!(
+            "{}",
+            result[0].error().unwrap()
+        )));
+    }
+
+    comment_on_issue(
+        issue,
+        repo,
+        "Automatic merging has been successfully scheduled.",
+        token,
+    )
+    .await?;
+
+    Ok(())
 }
 
 async fn handle_merge_cancel<'a>(
     event: gh::IssueCommentCreatedEvent<'a>,
     token: &str,
+    d1: D1Database,
 ) -> Result<()> {
     Ok(()) // TODO:
 }
