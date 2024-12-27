@@ -25,7 +25,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
     let router = Router::new();
 
     router
-        .get_async("/", |_req, ctx| async move {
+        .get_async("/", |_req, _ctx| async move {
             Response::redirect(Url::parse("https://github.com/satler-git/bot")?)
         })
         .post_async("/webhook", webhook)
@@ -88,7 +88,7 @@ async fn webhook(req: Request, ctx: RouteContext<()>) -> Result<Response> {
 }
 
 #[event(scheduled)]
-pub async fn scheduled_handler(event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
+pub async fn scheduled_handler(_event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
     {
         let d1 = env.d1("DB").unwrap();
         schedule::auto_merge(d1).await.unwrap();

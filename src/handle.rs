@@ -146,11 +146,10 @@ async fn handle_merge_add<'a>(
 
     let result = d1.batch(vec![insert_merge_query]).await?;
 
-    if result[0].success() == false {
-        return Err(worker::Error::RustError(format!(
-            "{}",
-            result[0].error().unwrap()
-        )));
+    if !result[0].success() {
+        return Err(worker::Error::RustError(
+            result[0].error().unwrap().to_string(),
+        ));
     }
 
     comment_on_issue(
@@ -225,11 +224,10 @@ async fn handle_merge_cancel<'a>(
 
     let result = d1.batch(vec![delete_merge_query]).await?;
 
-    if result[0].success() == false {
-        return Err(worker::Error::RustError(format!(
-            "{}",
-            result[0].error().unwrap()
-        )));
+    if !result[0].success() {
+        return Err(worker::Error::RustError(
+            result[0].error().unwrap().to_string(),
+        ));
     }
 
     comment_on_issue(
