@@ -67,10 +67,10 @@ async fn handle_merge_add<'a>(
     token: &str,
     date: NaiveDateTime,
 ) -> Result<()> {
+    let issue = &event.issue.issue;
+    let repo = &event.repository;
     // Issueな場合
     {
-        let issue = &event.issue.issue;
-        let repo = &event.repository;
         if issue.pull_request.is_none() {
             comment_on_issue(
                 issue,
@@ -84,8 +84,6 @@ async fn handle_merge_add<'a>(
     }
     // 既にマージされている場合
     {
-        let issue = &event.issue.issue;
-        let repo = &event.repository;
         let pr = issue.pull_request.as_ref().unwrap();
         if pr.merged_at.is_some() {
             comment_on_issue(
@@ -99,10 +97,8 @@ async fn handle_merge_add<'a>(
         }
     }
     // 過ぎている場合
+    let tz = FixedOffset::east_opt(9 * 3600).unwrap();
     {
-        let issue = &event.issue.issue;
-        let repo = &event.repository;
-        let tz = FixedOffset::east_opt(9 * 3600).unwrap();
         let now = Utc::now().with_timezone(&tz).naive_local();
 
         if now > date {
@@ -117,6 +113,7 @@ async fn handle_merge_add<'a>(
         }
     }
 
+    //  YYYY-MM-DDTHH:MM
     Ok(()) // TODO:
 }
 
