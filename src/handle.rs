@@ -232,7 +232,13 @@ async fn handle_merge_cancel<'a>(
         )));
     }
 
-    comment_on_issue(issue, repo, "Automatic merging has been successed", token).await?;
+    comment_on_issue(
+        issue,
+        repo,
+        "The automatic merge has been successfully cancelled.",
+        token,
+    )
+    .await?;
 
     Ok(())
 }
@@ -244,14 +250,24 @@ async fn is_already_merged(
     number: u64,
     d1: &D1Database,
 ) -> Result<Option<bool>> {
-    let statement =
-        d1.prepare("SELECT merged FROM merge WHERE (pr_number, owner, repository) = (?1, ?2, ?3)");
+    #[derive(Debug, serde::Deserialize)]
+    struct Res {
+        merged: u64,
+    }
 
-    let query = statement.bind(&[number.into(), owner.into(), repo.into()])?;
-    let result = query.first::<u8>(Some("merged")).await?;
+    let query = query!(
+        &d1,
+        "SELECT merged FROM merge WHERE (pr_number, owner, repository) = (?1, ?2, ?3)",
+        number,
+        owner,
+        &repo,
+    )?;
 
-    match result {
-        Some(merged) => Ok(Some(merged == 1)),
-        Option::None => Ok(None),
+    let result = query.run().await?.results::<Res>()?;
+
+    if result.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(result[0].merged == 1))
     }
 }
