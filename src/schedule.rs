@@ -47,6 +47,7 @@ pub async fn auto_merge(d1: &D1Database, github_app: crate::crypt::GitHubApp) ->
                 mark_as_merged(&d1, ri.id).await?; // 5分ごとにのアラームみたいになるのをさけるため
                 return Ok(());
             } else if is_pr_mergeable == None {
+                console_warn!("Merggeable is none.");
                 return Ok(());
             }
         }
