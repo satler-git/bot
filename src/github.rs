@@ -15,7 +15,7 @@ pub enum EventType {
 }
 
 use github_webhook::payload_types as gh;
-use worker::Result;
+use worker::{console_debug, Result};
 
 use reqwest::header;
 
@@ -80,6 +80,8 @@ pub async fn is_pr_mergeable(
         .map_err(|e| {
             worker::Error::RustError(format!("Error in reading text from the body: {e}"))
         })?;
+
+    console_debug!("/merge response: {res:?}");
 
     let payload: serde_json::Value =
         serde_json::from_str(&res).map_err(worker::Error::SerdeJsonError)?;
