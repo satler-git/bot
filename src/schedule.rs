@@ -16,7 +16,7 @@ pub async fn auto_merge(d1: &D1Database, github_app: crate::crypt::GitHubApp) ->
     console_log!("Querying merges");
     let query = query!(
         &d1,
-        "SELECT (id, pr_number, owner, repository, installation_id) FROM merge where will_merged_at < DATETIME('now') AND merged = 0"
+        "SELECT id, pr_number, owner, repository, installation_id FROM merge where will_merged_at < DATETIME('now') AND merged = 0 LIMIT 5"
     );
 
     let results = query.run().await?.results::<Res>()?;
