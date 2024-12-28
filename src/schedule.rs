@@ -12,6 +12,8 @@ pub async fn auto_merge(d1: &D1Database, github_app: crate::crypt::GitHubApp) ->
         repository: String,
         installation_id: u64,
     }
+    console_log!("Scheduled auto merge");
+    console_log!("Querying merges");
     let query = query!(
         &d1,
         "SELECT (id, pr_number, owner, repository, installation_id) FROM merge where will_merged_at < DATETIME('now') AND merged = 0"
@@ -19,6 +21,12 @@ pub async fn auto_merge(d1: &D1Database, github_app: crate::crypt::GitHubApp) ->
 
     let results = query.run().await?.results::<Res>()?;
     for ri in results {
+        console_log!(
+            "Merging PR: {}/{}:#{}",
+            ri.owner,
+            ri.repository,
+            ri.pr_number
+        );
         let token = github_app.token(ri.installation_id).await?;
         // // マージできるか
         // {

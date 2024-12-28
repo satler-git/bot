@@ -14,6 +14,7 @@ pub async fn issue_comment_created<'a>(
     d1: D1Database,
     installation_id: u64,
 ) -> Result<()> {
+    console_log!("Handling the event as IssueCommentCreatedEvent");
     let input = event.comment.body;
     let command = crate::parser::Command::try_parse(input, MENTION);
 
@@ -79,6 +80,7 @@ async fn handle_merge_add<'a>(
     d1: &D1Database,
     installation_id: u64,
 ) -> Result<()> {
+    console_log!("Handling merge add command");
     let issue = &event.issue.issue;
     let repo = &event.repository;
     let owner = &repo.owner.login;
@@ -188,6 +190,7 @@ async fn handle_merge_cancel<'a>(
     token: &str,
     d1: &D1Database,
 ) -> Result<()> {
+    console_log!("Handling merge cancel command");
     let issue = &event.issue.issue; // TODO: 上と共通だから切りだす
     let repo = &event.repository;
     let owner = &repo.owner.login;
