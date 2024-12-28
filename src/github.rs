@@ -81,8 +81,6 @@ pub async fn is_pr_mergeable(
             worker::Error::RustError(format!("Error in reading text from the body: {e}"))
         })?;
 
-    console_debug!("/merge response: {res:?}");
-
     let payload: serde_json::Value =
         serde_json::from_str(&res).map_err(worker::Error::SerdeJsonError)?;
 
@@ -116,6 +114,8 @@ pub async fn marge_pr(pr_number: u64, owner: &str, repo: &str, token: &str) -> R
         .map_err(|e| {
             worker::Error::RustError(format!("Error in reading text from the body: {e}"))
         })?;
+
+    console_debug!("/merge response: {res:?}");
 
     let res: Res = serde_json::from_str(&res).map_err(worker::Error::SerdeJsonError)?;
     if !res.merged {
