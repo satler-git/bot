@@ -117,7 +117,10 @@ pub async fn marge_pr(pr_number: u64, owner: &str, repo: &str, token: &str) -> R
 
     let res: Res = serde_json::from_str(&res).map_err(worker::Error::SerdeJsonError)?;
     if !res.merged {
-        Err(worker::Error::RustError(res.message))
+        Err(worker::Error::RustError(format!(
+            "Pr havn't been merged: {}",
+            res.message
+        )))
     } else {
         Ok(())
     }
