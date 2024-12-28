@@ -101,7 +101,7 @@ pub async fn marge_pr(pr_number: u64, owner: &str, repo: &str, token: &str) -> R
     let client = reqwest::Client::new();
 
     let res = client
-        .get(endpoint)
+        .put(endpoint)
         .header("X-GitHub-Api-Version", "2022-11-28")
         .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .header(header::ACCEPT, "application/vnd.github+json")
