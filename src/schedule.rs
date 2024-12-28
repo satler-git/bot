@@ -20,6 +20,7 @@ pub async fn auto_merge(d1: &D1Database, github_app: crate::crypt::GitHubApp) ->
     );
 
     let results = query.run().await?.results::<Res>()?;
+    console_debug!("Query Result: {results:?}");
     for ri in results {
         console_log!(
             "Merging PR: {}/{}:#{}",
